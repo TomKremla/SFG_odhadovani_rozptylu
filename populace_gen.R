@@ -13,7 +13,7 @@ load("data_orig_weighted.RData")
 age = read.xlsx("./Data/Population_sociodemo_2021.xlsx", 2)
 sex = read.xlsx("./Data/Population_sociodemo_2021.xlsx", 1)
 edu = read.xlsx("./Data/Population_sociodemo_2021.xlsx", 3)
-test = read.csv("sldb2021_vek_pohlavi_vzd.csv")
+test = read.csv("sldb2021_vzdelani_vek2_pohlavi.csv")
 vazba = read.csv("vazba_obec_kraj.csv")
 
 #Bereme pouze obce a odstraňujeme řádky se smíchaným pohlavím
