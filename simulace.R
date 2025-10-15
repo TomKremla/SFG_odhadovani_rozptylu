@@ -57,7 +57,7 @@ populace_rts$cat5=ifelse(populace_rts$OZ_2 == 5,1,0)
 populace_rts$cat9=ifelse(populace_rts$OZ_2 == 9,1,0)
 
 ## Simulace
-B = 10  # pocet iteraci
+B = 1000  # pocet iteraci
 categories = c("cat1","cat2","cat3","cat4","cat5","cat9")
 targets = sapply(categories, function(cat) mean(populace_rts[[cat]])) # skutecne populacni proporce
 
@@ -181,7 +181,7 @@ for (b in 1:B) {
                       control=list(epsilon=1e-8, maxit=1000))
   
   sampled$poststrat_weight_r = weights(design_raked)
-  design2 = svydesign(id=~1, weights=~poststrat_weight, data=sampled)
+  design2 = svydesign(id=~1, weights=~poststrat_weight_r, data=sampled)
   design2_trim = trimWeights(design2, upper=3, lower=1/3)
   sampled$poststrat_weight_r_trim = weights(design2_trim)
   
@@ -278,7 +278,7 @@ for (name in names(results)) {
     Category = categories,
     Coverage = round(res$coverage,3),
     AvgIntLength = round(res$avg_interval_length,4),
-    MSE = round(res$mse,6)
+    RMSE = round(sqrt(res$mse),6)
   )
   print(df, row.names=FALSE)
   

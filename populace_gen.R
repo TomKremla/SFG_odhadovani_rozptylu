@@ -76,10 +76,6 @@ populace_split = bind_rows(non_other, redistributed) %>%
   group_by(uzemi_kod, uzemi_txt, pohlavi_txt, vek_txt, vzdelani_grouped) %>%
   summarise(hodnota = sum(hodnota, na.rm = TRUE), .groups = "drop")
 
-#Sanity check
-sum(populace_split[populace_split$uzemi_txt == "Želechovice nad Dřevnicí",]$hodnota)
-sum(populace_split[populace_split$vzdelani_grouped == "ZŠ",]$hodnota)/sum(populace_split$hodnota)
-
 #Redistribuce do věkových kategorií
 vek5 = read.csv("sldb2021_vek5_pohlavi.csv")
 vek5 = na.omit(vek5)
@@ -108,27 +104,27 @@ vek5 = vek5 %>%
   group_by(uzemi_kod, pohlavi_txt, vek_group) %>%
   summarise(hodnota = sum(hodnota, na.rm = TRUE), .groups = "drop")
 
-set.seed(123)  # reproducibility
+set.seed(123)
 
-# Step 1: probabilities in vek5
+#Pravdepodobni
 vek5_probs <- vek5 %>%
   group_by(uzemi_kod, pohlavi_txt) %>%
   mutate(prob = hodnota / sum(hodnota)) %>%
   ungroup()
 
-# Step 2: redistribute rows with vek_txt == "15 - 64 let"
+# Redistribuce
 redistributed <- populace_split %>%
   filter(vek_txt == "15 - 64 let") %>%
   left_join(
     vek5_probs %>% select(uzemi_kod, pohlavi_txt, vek_group, prob),
     by = c("uzemi_kod", "pohlavi_txt"),
-    relationship = "many-to-many"   # silence warning, keep all matches
+    relationship = "many-to-many"
   ) %>%
   group_by(uzemi_kod, pohlavi_txt, vzdelani_grouped) %>%
   nest() %>%
   mutate(
     data = map(data, ~ {
-      size <- unique(.x$hodnota)      # total to redistribute
+      size <- unique(.x$hodnota)
       probs <- .x$prob
       vek_groups <- .x$vek_group
       alloc <- as.numeric(rmultinom(1, size = size, prob = probs))
@@ -141,10 +137,9 @@ redistributed <- populace_split %>%
       )
     })
   ) %>%
-  unnest(cols = c(data)) %>%   # <— now unnest correctly
+  unnest(cols = c(data)) %>%
   ungroup()
 
-# Step 3: keep other rows unchanged
 populace_split_final <- populace_split %>%
   filter(vek_txt != "15 - 64 let") %>%
   bind_rows(redistributed)
